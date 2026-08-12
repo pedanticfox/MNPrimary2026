@@ -4,6 +4,9 @@ library(tidyverse)
 #create pointer to directory where the files are
 dir <- "./Downloads/"
 
+#file layouts of results and linkage tables from MN SOS
+#https://electionresults.sos.mn.gov/Results/MediaFileLayout/Index?erselectionId=200
+
 #read in the precinct table
 prnct <- read.csv(paste0(dir, "PrctTbl.txt") , 
                  sep = ";", 
@@ -46,6 +49,7 @@ state_guv <- guv2 |>
 
   group_by(prtyabrv) |>
   summarize(count = sum(votes)) |>
+  ungroup() |>
   pivot_wider(names_from = prtyabrv, 
               values_from = count) |>
   mutate(prop = Amy/(Amy+R))
@@ -54,6 +58,7 @@ state_guv <- guv2 |>
 cnty_guv <- guv2 |>
   group_by(cnty_nme, prtyabrv) |>
   summarize(count = sum(votes)) |>
+  ungroup() |>
   pivot_wider(names_from = prtyabrv, 
               values_from = count) |>
   mutate(prop = Amy/(Amy+R))
@@ -68,6 +73,7 @@ state_dfl_guv <- guv3 |>
   mutate(candname = if_else(str_detect(candname, "Kobey"), "Kobey", "Amy")) |>
   group_by(candname) |>
   summarize(count = sum(votes)) |>
+  ungroup() |>
   pivot_wider(names_from = candname, 
               values_from = count) |>
   mutate(prop = Amy/(Amy+Kobey))
@@ -78,6 +84,7 @@ cnty_dfl_guv <- guv3 |>
   mutate(candname = if_else(str_detect(candname, "Kobey"), "Kobey", "Amy")) |>
   group_by(cnty_nme, candname) |>
   summarize(count = sum(votes)) |>
+  ungroup() |>
   pivot_wider(names_from = candname, 
               values_from = count) |>
   mutate(prop = Amy/(Amy+Kobey))
@@ -88,6 +95,7 @@ prcnt_guv <- guv2 |>
   filter(str_detect(prcnt_nme, regex("^St. Paul W", ignore_case = TRUE))) |>
   group_by(prcnt_nme, prtyabrv) |>
   summarize(count = sum(votes)) |>
+  ungroup() |>
   pivot_wider(names_from = prtyabrv, 
               values_from = count) |>
   mutate(prop = Amy/(Amy+R))
@@ -100,6 +108,7 @@ prcnt_dfl_guv <- guv3 |>
   filter(str_detect(prcnt_nme, regex("^St. Paul W", ignore_case = TRUE))) |>
   group_by(prcnt_nme, candname) |>
   summarize(count = sum(votes)) |>
+  ungroup() |>
   pivot_wider(names_from = candname, 
               values_from = count) |>
   mutate(prop = Amy/(Amy+Kobey))
@@ -136,6 +145,7 @@ uscong_dfl <- senate2 |>
   mutate(candname = if_else(str_detect(candname, "Flanagan"), "Flanagan", "Craig")) |>
   group_by(candname) |>
   summarize(count = sum(votes)) |>
+  ungroup() |>
   pivot_wider(names_from = candname, 
               values_from = count) |>
   mutate(prop = Flanagan/(Flanagan+Craig))
@@ -146,6 +156,7 @@ cnty_uscong_dfl <- senate2 |>
   mutate(candname = if_else(str_detect(candname, "Flanagan"), "Flanagan", "Craig")) |>
   group_by(cnty_nme, candname) |>
   summarize(count = sum(votes)) |>
+  ungroup() |>
   pivot_wider(names_from = candname, 
               values_from = count) |>
   mutate(prop = Flanagan/(Craig+Flanagan))
@@ -158,9 +169,45 @@ prcnt_uscong_dfl <- senate2 |>
   filter(str_detect(prcnt_nme, regex("^St. Paul W", ignore_case = TRUE))) |>
   group_by(prcnt_nme, candname) |>
   summarize(count = sum(votes)) |>
+  ungroup() |>
   pivot_wider(names_from = candname, 
               values_from = count) |>
   mutate(prop = Flanagan/(Craig+Flanagan))
 
 
-#Still need to export analyses
+#Create notes tab
+
+notes <- tibble(Note = c("All analyses are the proportion of votes to Amy Klobuchar or Peggy Flanagan respectively", rep(NA, 8)),
+                Tab_Name = c("Gov-AmyVRep_St","Gov-AmyVRep_Cnty",
+                               "Gov-AmyVRep_Prcnts", "Gov-AmyVKobey_St",
+                               "Gov-AmyVKobey_Cnty","Gov-AmyVKobey_Prcnts",
+                               "Sen-CraigVFlanagan_St","Sen-CraigVFlanagan_Cnty",
+                               "Sen-CraigVFlanagan_Prcnts"),
+                Description = c("Governor Primary 2026 - Amy votes versus all votes cast for Republications - State Level",
+                                  "Governor Primary 2026 - Amy votes versus all votes cast for Republications - County Level",
+                                  "Governor Primary 2026 - Amy votes versus all votes cast for Republications - Saint Paul Precinct Level",
+                                  "Governor Primary 2026 - Amy votes versus votes cast for Kobey - State Level",
+                                  "Governor Primary 2026 - Amy votes versus votes cast for Kobey - County Level",
+                                  "Governor Primary 2026 - Amy votes versus votes cast for Kobey - Saint Paul Precinct Level",
+                                  "Senate Primary 2026 - Peggy Flanagan votes versus votes cast for Angie Craig - State Level",
+                                  "Senate Primary 2026 - Peggy Flanagan votes versus votes cast for Angie Craig - County Level",
+                                  "Senate Primary 2026 - APeggy Flanagan votes versus votes cast for Angie Craig - Saint Paul Precinct Level"
+                                  ), 
+                Addtl = c(NA, "cnty_nme = County Name", "prcnt_nme = Precinct Name", NA,"cnty_nme = County Name", "prcnt_nme = Precinct Name", NA,"cnty_nme = County Name", "prcnt_nme = Precinct Name" ))
+
+#create list of files to export
+files <- lst(  "Notes" = notes,
+               "Gov-AmyVRep_St" = state_guv,
+               "Gov-AmyVRep_Cnty" = cnty_guv,
+               "Gov-AmyVRep_Prcnts" = prcnt_guv,
+               "Gov-AmyVKobey_St" = state_dfl_guv,
+               "Gov-AmyVKobey_Cnty" = cnty_dfl_guv,
+               "Gov-AmyVKobey_Prcnts" = prcnt_dfl_guv,
+               "Sen-CraigVFlanagan_St" = uscong_dfl,
+               "Sen-CraigVFlanagan_Cnty" = cnty_uscong_dfl,
+               "Sen-CraigVFlanagan_Prcnts" = prcnt_uscong_dfl
+               )
+
+openxlsx::write.xlsx(files, file = paste0(dir, "Primary Analysis Output 2026.xlsx"))
+
+imap(files, ~ data.table::fwrite(.x, file = paste0(dir, "delimited/", .y, ".csv), sep = ";", na = "" ) )
