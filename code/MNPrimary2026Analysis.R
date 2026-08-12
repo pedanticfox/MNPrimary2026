@@ -37,12 +37,13 @@ guv <- read.csv(paste0(dir, "governorpct.txt") ,
 
 #create a dataframe that is only has Amy and any Republican
 guv2 <- guv |>
-  filter(str_detect(candname, "Amy") | prtyabrv == "R")
+  filter(str_detect(candname, "Amy") | prtyabrv == "R") |>
+  #rename DFL to Amy since it's just her
+  mutate(prtyabrv = if_else(prtyabrv =="R", prtyabrv, "Amy" ))
 
 #create a tabulation for the state level
 state_guv <- guv2 |>
-  #rename DFL to Amy since it's just her
-  mutate(prty_abrv = if_else(prtyabrv  == "R", prtyabrv, "Amy")) |>
+
   group_by(prtyabrv) |>
   summarize(count = sum(votes)) |>
   pivot_wider(names_from = prtyabrv, 
@@ -51,8 +52,6 @@ state_guv <- guv2 |>
 
 #Create county level tabulations
 cnty_guv <- guv2 |>
-  #rename DFL to Amy since it's just her
-  mutate(prty_abrv = if_else(prtyabrv  == "R", prtyabrv, "Amy")) |>
   group_by(cnty_nme, prtyabrv) |>
   summarize(count = sum(votes)) |>
   pivot_wider(names_from = prtyabrv, 
@@ -85,8 +84,6 @@ cnty_dfl_guv <- guv3 |>
 
 #Precinct level analysis of Saint Paul for Amy versus republicans
 prcnt_guv <- guv2 |>
-  #rename DFL to Amy since it's just her
-  mutate(prty_abrv = if_else(prtyabrv  == "R", prtyabrv, "Amy")) |>
   #Keep only Saint Paul Wards and precincts
   filter(str_detect(prcnt_nme, regex("^St. Paul W", ignore_case = TRUE))) |>
   group_by(prcnt_nme, prtyabrv) |>
@@ -105,6 +102,65 @@ prcnt_dfl_guv <- guv3 |>
   summarize(count = sum(votes)) |>
   pivot_wider(names_from = candname, 
               values_from = count) |>
-  mutate(prop) = Amy/(Amy+Kobey))
+  mutate(prop = Amy/(Amy+Kobey))
+
+
+#Angie Craig and Peggy Flanagan
+
+#read in the senate primary election results
+senate <- read.csv(paste0(dir, "ussenatepct.txt") , 
+                sep = ";", 
+                header = FALSE, 
+                col.names = c("state", "cntyid", "prcnt_nme", "offid", "offname", "dist", "candord", 
+                              "candname", "suffix", "incmb_cd", "prtyabrv", "num_prcnt_rpt", 
+                              "num_prcnt_vote", "votes", "pct_vts", "tot_vts_area")) |>
+  #create fips in case I decide to map stuff
+  mutate(cnty_fips = (cntyid *2)-1) |>
+  #join in the county information
+  left_join(cnty |>
+              select(cntyid, cnty_nme)) |>
+  #align the column names for precinct id to make linkage automatic
+  rename(prcnt_id = prcnt_nme) |>
+  #link the precinct information
+  left_join(prnct |>
+              select(cntyid, prcnt_id, prcnt_nme, leg_dist, cong_dist))
+
+
+#create a dataframe that is only Amy or Kobey
+senate2 <- senate |>
+  filter(str_detect(candname, "Flanagan|Craig"))
+
+#Examine state level differences between Amy and Kobey for votes cast
+uscong_dfl <- senate2 |>
+  #Simplify names for easy listing in calculations and better readability
+  mutate(candname = if_else(str_detect(candname, "Flanagan"), "Flanagan", "Craig")) |>
+  group_by(candname) |>
+  summarize(count = sum(votes)) |>
+  pivot_wider(names_from = candname, 
+              values_from = count) |>
+  mutate(prop = Flanagan/(Flanagan+Craig))
+
+#examine the county level differences for votes cast between Amy and Kobey
+cnty_uscong_dfl <- senate2 |>
+  #Simplify names for easy listing in calculations and better readability
+  mutate(candname = if_else(str_detect(candname, "Flanagan"), "Flanagan", "Craig")) |>
+  group_by(cnty_nme, candname) |>
+  summarize(count = sum(votes)) |>
+  pivot_wider(names_from = candname, 
+              values_from = count) |>
+  mutate(prop = Flanagan/(Craig+Flanagan))
+
+#Precinct level analysis of Saint Paul for Amy versus Kobey
+prcnt_uscong_dfl <- senate2 |>
+  #Simplify names for easy listing in calculations and better readability
+  mutate(candname = if_else(str_detect(candname, "Flanagan"), "Flanagan", "Craig")) |>
+  #Keep only Saint Paul Wards and precincts
+  filter(str_detect(prcnt_nme, regex("^St. Paul W", ignore_case = TRUE))) |>
+  group_by(prcnt_nme, candname) |>
+  summarize(count = sum(votes)) |>
+  pivot_wider(names_from = candname, 
+              values_from = count) |>
+  mutate(prop = Flanagan/(Craig+Flanagan))
+
 
 #Still need to export analyses
