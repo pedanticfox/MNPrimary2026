@@ -1,0 +1,10 @@
+Note;Tab_Name;Description;Addtl
+All analyses are the proportion of votes to Amy Klobuchar or Peggy Flanagan respectively;Gov-AmyVRep_St;Governor Primary 2026 - Amy votes versus all votes cast for Republications - State Level;
+;Gov-AmyVRep_Cnty;Governor Primary 2026 - Amy votes versus all votes cast for Republications - County Level;cnty_nme = County Name
+;Gov-AmyVRep_Prcnts;Governor Primary 2026 - Amy votes versus all votes cast for Republications - Saint Paul Precinct Level;prcnt_nme = Precinct Name
+;Gov-AmyVKobey_St;Governor Primary 2026 - Amy votes versus votes cast for Kobey - State Level;
+;Gov-AmyVKobey_Cnty;Governor Primary 2026 - Amy votes versus votes cast for Kobey - County Level;cnty_nme = County Name
+;Gov-AmyVKobey_Prcnts;Governor Primary 2026 - Amy votes versus votes cast for Kobey - Saint Paul Precinct Level;prcnt_nme = Precinct Name
+;Sen-CraigVFlanagan_St;Senate Primary 2026 - Peggy Flanagan votes versus votes cast for Angie Craig - State Level;
+;Sen-CraigVFlanagan_Cnty;Senate Primary 2026 - Peggy Flanagan votes versus votes cast for Angie Craig - County Level;cnty_nme = County Name
+;Sen-CraigVFlanagan_Prcnts;Senate Primary 2026 - APeggy Flanagan votes versus votes cast for Angie Craig - Saint Paul Precinct Level;prcnt_nme = Precinct Name
