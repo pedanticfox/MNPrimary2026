@@ -52,7 +52,10 @@ state_guv <- guv2 |>
   ungroup() |>
   pivot_wider(names_from = prtyabrv, 
               values_from = count) |>
-  mutate(prop = Amy/(Amy+R))
+  mutate(prop = round(Amy/(Amy+R),2),
+         ratio = case_when(Amy >= R ~ round(Amy/R, 2),
+                           Amy < R ~ round(R/Amy,2)* -1)
+  )
 
 #Create county level tabulations
 cnty_guv <- guv2 |>
@@ -61,7 +64,28 @@ cnty_guv <- guv2 |>
   ungroup() |>
   pivot_wider(names_from = prtyabrv, 
               values_from = count) |>
-  mutate(prop = Amy/(Amy+R))
+  mutate(prop = round(Amy/(Amy+R),2),
+         ratio = case_when(Amy >= R ~ round(Amy/R, 2),
+                           Amy < R ~ round(R/Amy,2)* -1),
+         ratio = if_else(abs(ratio) == 1, 1, ratio)
+  )
+
+
+#Precinct level analysis of Saint Paul for Amy versus republicans
+prcnt_guv <- guv2 |>
+  #Keep only Saint Paul Wards and precincts
+  filter(str_detect(prcnt_nme, regex("^St. Paul W", ignore_case = TRUE))) |>
+  group_by(prcnt_nme, prtyabrv) |>
+  summarize(count = sum(votes)) |>
+  ungroup() |>
+  pivot_wider(names_from = prtyabrv, 
+              values_from = count) |>
+  mutate(prop = round(Amy/(Amy+R),2),
+         ratio = case_when(Amy >= R ~ round(Amy/R, 2),
+                           Amy < R ~ round(R/Amy,2)* -1),
+         ratio = if_else(abs(ratio) == 1, 1, ratio)
+  )
+
 
 #create a dataframe that is only Amy or Kobey
 guv3 <- guv |>
@@ -76,7 +100,11 @@ state_dfl_guv <- guv3 |>
   ungroup() |>
   pivot_wider(names_from = candname, 
               values_from = count) |>
-  mutate(prop = Amy/(Amy+Kobey))
+  mutate(prop = round(Amy/(Amy+Kobey),2),
+         ratio = case_when(Amy >= Kobey ~ round(Amy/Kobey, 2),
+                           Amy < Kobey ~ round(Kobey/Amy,2)* -1),
+         ratio = if_else(abs(ratio) == 1, 1, ratio)
+  )
 
 #examine the county level differences for votes cast between Amy and Kobey
 cnty_dfl_guv <- guv3 |>
@@ -87,18 +115,12 @@ cnty_dfl_guv <- guv3 |>
   ungroup() |>
   pivot_wider(names_from = candname, 
               values_from = count) |>
-  mutate(prop = Amy/(Amy+Kobey))
+  mutate(prop = round(Amy/(Amy+Kobey),2),
+         ratio = case_when(Amy >= Kobey ~ round(Amy/Kobey, 2),
+                           Amy < Kobey ~ round(Kobey/Amy,2)* -1),
+         ratio = if_else(abs(ratio) == 1, 1, ratio)
+  )
 
-#Precinct level analysis of Saint Paul for Amy versus republicans
-prcnt_guv <- guv2 |>
-  #Keep only Saint Paul Wards and precincts
-  filter(str_detect(prcnt_nme, regex("^St. Paul W", ignore_case = TRUE))) |>
-  group_by(prcnt_nme, prtyabrv) |>
-  summarize(count = sum(votes)) |>
-  ungroup() |>
-  pivot_wider(names_from = prtyabrv, 
-              values_from = count) |>
-  mutate(prop = Amy/(Amy+R))
 
 #Precinct level analysis of Saint Paul for Amy versus Kobey
 prcnt_dfl_guv <- guv3 |>
@@ -111,7 +133,11 @@ prcnt_dfl_guv <- guv3 |>
   ungroup() |>
   pivot_wider(names_from = candname, 
               values_from = count) |>
-  mutate(prop = Amy/(Amy+Kobey))
+  mutate(prop = round(Amy/(Amy+Kobey),2),
+         ratio = case_when(Amy >= Kobey ~ round(Amy/Kobey, 2),
+                           Amy < Kobey ~ round(Kobey/Amy,2)* -1),
+         ratio = if_else(abs(ratio) == 1, 1, ratio)
+  )
 
 
 #Angie Craig and Peggy Flanagan
@@ -148,7 +174,11 @@ uscong_dfl <- senate2 |>
   ungroup() |>
   pivot_wider(names_from = candname, 
               values_from = count) |>
-  mutate(prop = Flanagan/(Flanagan+Craig))
+  mutate(prop = round(Flanagan/(Flanagan+Craig),2),
+         ratio = case_when(Flanagan >= Craig ~ round(Flanagan/Craig, 2),
+                           Flanagan < Craig ~ round(Craig/Flanagan,2)* -1),
+         ratio = if_else(abs(ratio) == 1, 1, ratio)
+  )
 
 #examine the county level differences for votes cast between Amy and Kobey
 cnty_uscong_dfl <- senate2 |>
@@ -159,7 +189,11 @@ cnty_uscong_dfl <- senate2 |>
   ungroup() |>
   pivot_wider(names_from = candname, 
               values_from = count) |>
-  mutate(prop = Flanagan/(Craig+Flanagan))
+  mutate(prop = round(Flanagan/(Craig+Flanagan),2),
+         ratio = case_when(Flanagan >= Craig ~ round(Flanagan/Craig, 2),
+                           Flanagan < Craig ~ round(Craig/Flanagan,2)* -1),
+         ratio = if_else(abs(ratio) == 1, 1, ratio)
+  )
 
 #Precinct level analysis of Saint Paul for Amy versus Kobey
 prcnt_uscong_dfl <- senate2 |>
@@ -172,12 +206,16 @@ prcnt_uscong_dfl <- senate2 |>
   ungroup() |>
   pivot_wider(names_from = candname, 
               values_from = count) |>
-  mutate(prop = Flanagan/(Craig+Flanagan))
+  mutate(prop = round(Flanagan/(Craig+Flanagan),2),
+         ratio = case_when(Flanagan >= Craig ~ round(Flanagan/Craig, 2),
+                           Flanagan < Craig ~ round(Craig/Flanagan,2)* -1),
+         ratio = if_else(abs(ratio) == 1, 1, ratio)
+  )
 
 
 #Create notes tab
 
-notes <- tibble(Note = c("All analyses are the proportion of votes to Amy Klobuchar or Peggy Flanagan respectively", rep(NA, 8)),
+notes <- tibble(Note = c("All analyses are the proportion (or ratio) of votes to Amy Klobuchar or Peggy Flanagan respectively. A negative ratio indicates that Amy/Peggy had fewer votes.", rep(NA, 8)),
                 Tab_Name = c("Gov-AmyVRep_St","Gov-AmyVRep_Cnty",
                                "Gov-AmyVRep_Prcnts", "Gov-AmyVKobey_St",
                                "Gov-AmyVKobey_Cnty","Gov-AmyVKobey_Prcnts",
